@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global catch-all safety net (Pillar 1)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions for secure checks
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Collections
+    match /patients/{patientId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /appointments/{appointmentId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /consultations/{consultationId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /queue/{queueItemId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /ambulances/{ambulanceId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /bedStatuses/{bedStatusId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /payments/{paymentId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /settings/{settingsId} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}

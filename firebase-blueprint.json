@@ -1,0 +1,158 @@
+{
+  "entities": {
+    "Patient": {
+      "title": "Patient",
+      "description": "Patient record in clinic operating system",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "age": { "type": "integer" },
+        "gender": { "type": "string", "enum": ["Male", "Female", "Other"] },
+        "phone": { "type": "string" },
+        "city": { "type": "string" },
+        "condition": { "type": "string" },
+        "outcome": { "type": "string" },
+        "email": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "age", "gender", "phone", "city", "condition", "createdAt"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Booked doctor appointment",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientId": { "type": "string" },
+        "patientName": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "doctorName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "timeSlot": { "type": "string" },
+        "status": { "type": "string", "enum": ["scheduled", "completed", "cancelled"] },
+        "reason": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "patientId", "patientName", "doctorId", "doctorName", "date", "timeSlot", "status", "createdAt"]
+    },
+    "Consultation": {
+      "title": "Consultation",
+      "description": "Clinical consultation with AI copilot notes and prescription",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "appointmentId": { "type": "string" },
+        "patientId": { "type": "string" },
+        "patientName": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "doctorName": { "type": "string" },
+        "symptoms": { "type": "string" },
+        "diagnosis": { "type": "string" },
+        "notes": { "type": "string" },
+        "prescription": { "type": "array" },
+        "interactionWarnings": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "patientId", "patientName", "doctorId", "doctorName", "symptoms", "diagnosis", "notes", "prescription", "createdAt"]
+    },
+    "QueueItem": {
+      "title": "QueueItem",
+      "description": "Live queue patient token",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientId": { "type": "string" },
+        "patientName": { "type": "string" },
+        "tokenNumber": { "type": "integer" },
+        "doctorId": { "type": "string" },
+        "doctorName": { "type": "string" },
+        "status": { "type": "string", "enum": ["Waiting", "In Progress", "Completed", "Skipped"] },
+        "checkInTime": { "type": "string" },
+        "estimatedWaitMinutes": { "type": "integer" }
+      },
+      "required": ["id", "patientId", "patientName", "tokenNumber", "doctorId", "doctorName", "status", "checkInTime", "estimatedWaitMinutes"]
+    },
+    "Ambulance": {
+      "title": "Ambulance",
+      "description": "Ambulance tracking record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehicleNumber": { "type": "string" },
+        "type": { "type": "string", "enum": ["ALS", "BLS"] },
+        "area": { "type": "string" },
+        "distanceKm": { "type": "number" },
+        "status": { "type": "string", "enum": ["Available", "On the way", "At emergency"] },
+        "driverName": { "type": "string" },
+        "driverPhone": { "type": "string" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["id", "vehicleNumber", "type", "area", "distanceKm", "status", "driverName", "driverPhone", "lastUpdated"]
+    },
+    "HospitalBedStatus": {
+      "title": "HospitalBedStatus",
+      "description": "Real-time hospital bed status updates",
+      "type": "object",
+      "properties": {
+        "hospitalId": { "type": "string" },
+        "hospitalName": { "type": "string" },
+        "distanceKm": { "type": "number" },
+        "bedsGeneralFree": { "type": "integer" },
+        "bedsICUFree: ": { "type": "integer" },
+        "bedsEmergencyFree": { "type": "integer" },
+        "patientsAdmitted": { "type": "integer" },
+        "patientsWaitingOPD": { "type": "integer" },
+        "patientsInTreatment": { "type": "integer" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["hospitalId", "hospitalName", "distanceKm", "bedsGeneralFree", "bedsICUFree", "bedsEmergencyFree", "patientsAdmitted", "patientsWaitingOPD", "patientsInTreatment", "lastUpdated"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Payment receipt transaction ledger",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patientId": { "type": "string" },
+        "patientName": { "type": "string" },
+        "amount": { "type": "number" },
+        "method": { "type": "string", "enum": ["UPI", "GPay", "PhonePe", "Cash"] },
+        "upiRef": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "patientId", "patientName", "amount", "method", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/patients/{patientId}": {
+      "schema": "Patient",
+      "description": "Patient records"
+    },
+    "/appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Patient bookings"
+    },
+    "/consultations/{consultationId}": {
+      "schema": "Consultation",
+      "description": "Assisted consultations and prescriptions"
+    },
+    "/queue/{queueItemId}": {
+      "schema": "QueueItem",
+      "description": "Waiting queue tokens"
+    },
+    "/ambulances/{ambulanceId}": {
+      "schema": "Ambulance",
+      "description": "Emergency vehicle states"
+    },
+    "/bedStatuses/{bedStatusId}": {
+      "schema": "HospitalBedStatus",
+      "description": "Real-time bed counts"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "UPI and Cash transactions"
+    }
+  }
+}
