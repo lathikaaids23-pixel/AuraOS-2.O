@@ -14,9 +14,38 @@ import {
   TrendingUp,
   BrainCircuit,
   Filter,
-  DollarSign
+  DollarSign,
+  Compass
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Precise Coordinate centers for Indian Cities in default data
+const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  Chennai: { lat: 13.0827, lng: 80.2707 },
+  Bengaluru: { lat: 12.9716, lng: 77.5946 },
+  Delhi: { lat: 28.6139, lng: 77.2090 },
+  Mumbai: { lat: 19.0760, lng: 72.8777 },
+  Hyderabad: { lat: 17.3850, lng: 78.4867 },
+  Pune: { lat: 18.5204, lng: 73.8567 },
+  Kolkata: { lat: 22.5726, lng: 88.3639 },
+  Jaipur: { lat: 26.9124, lng: 75.7873 },
+  Ahmedabad: { lat: 23.0225, lng: 72.5714 },
+  Lucknow: { lat: 26.8467, lng: 80.9462 },
+  Kochi: { lat: 9.9312, lng: 76.2673 },
+  Patna: { lat: 25.5941, lng: 85.1376 },
+};
+
+function getHospitalCoords(hospital: Hospital) {
+  const cityCenter = CITY_COORDINATES[hospital.city] || { lat: 20.5937, lng: 78.9629 };
+  // Generate pseudorandom stable offset per hospital using hash of the ID
+  const seed = hospital.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const latOffset = Math.sin(seed) * (hospital.distanceKm % 5 + 1) * 0.007;
+  const lngOffset = Math.cos(seed) * (hospital.distanceKm % 5 + 1) * 0.007;
+  return {
+    lat: cityCenter.lat + latOffset,
+    lng: cityCenter.lng + lngOffset,
+  };
+}
 
 export const HospitalFinderView: React.FC = () => {
   const { state, triggerLocalBedStatusPoll } = useClinic();
@@ -27,6 +56,22 @@ export const HospitalFinderView: React.FC = () => {
   const [cityFilter, setCityFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [costFilter, setCostFilter] = useState('');
+
+  // Map Navigation State
+  const [selectedHospitalId, setSelectedHospitalId] = useState<string | null>(null);
+  const [mapCenter, setMapCenter] = useState({ lat: 20.5937, lng: 78.9629 }); // Center of India
+  const [mapZoom, setMapZoom] = useState(4.8);
+
+  const handleCityChange = (city: string) => {
+    setCityFilter(city);
+    if (city && CITY_COORDINATES[city]) {
+      setMapCenter(CITY_COORDINATES[city]);
+      setMapZoom(11);
+    } else {
+      setMapCenter({ lat: 20.5937, lng: 78.9629 });
+      setMapZoom(4.8);
+    }
+  };
 
   // AI Assistant Criteria
   const [aiCriteria, setAiCriteria] = useState<'low-income' | 'critical-icu' | 'premium-specialist'>('low-income');
@@ -185,7 +230,7 @@ export const HospitalFinderView: React.FC = () => {
             <div className="flex gap-1.5 flex-wrap">
               <select
                 value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
+                onChange={(e) => handleCityChange(e.target.value)}
                 className="bg-slate-950/60 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xxs text-slate-300 focus:outline-none"
               >
                 <option value="">All Cities</option>
@@ -220,6 +265,137 @@ export const HospitalFinderView: React.FC = () => {
             </div>
           </div>
 
+          {/* Interactive Aura Cyber-Medical Grid Locator (Replacer for Google Map) */}
+          <div className="w-full h-80 rounded-2xl bg-slate-950/90 border border-slate-800/80 overflow-hidden relative shadow-lg p-1 select-none flex flex-col justify-between">
+            {/* Top Coordinate indicators */}
+            <div className="flex justify-between items-center px-4 py-2 bg-slate-950/80 border-b border-slate-900 z-10 text-[9px] font-mono text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                ACTIVE RADAR SCANNING...
+              </span>
+              <span>GRID LOCK: {cityFilter ? cityFilter.toUpperCase() : "INDIA OVERALL"}</span>
+            </div>
+
+            {/* Simulated Grid Area */}
+            <div className="relative flex-grow overflow-hidden w-full h-full bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] bg-slate-950 flex items-center justify-center">
+              
+              {/* Radar Sweeper Line */}
+              <div className="absolute inset-0 pointer-events-none z-0">
+                <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-500/10 flex items-center justify-center">
+                  <div className="w-[180px] h-[180px] rounded-full border border-cyan-500/10 flex items-center justify-center">
+                    <div className="w-[80px] h-[80px] rounded-full border border-cyan-500/5"></div>
+                  </div>
+                </div>
+                {/* Rotating scanning ray */}
+                <div className="absolute top-1/2 left-1/2 w-full h-0.5 bg-gradient-to-r from-cyan-500/20 to-transparent origin-left rotate-45 animate-[spin_8s_linear_infinite] -translate-y-1/2"></div>
+              </div>
+
+              {/* Central Target Beacon */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center z-10 pointer-events-none">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border border-white/20"></span>
+                </span>
+                <span className="text-[8px] font-mono font-bold text-blue-400/80 bg-slate-950/90 border border-slate-800 px-1.5 py-0.5 rounded mt-1 shadow-md uppercase">
+                  {cityFilter || "India"}
+                </span>
+              </div>
+
+              {/* Plotted Hospital Nodes */}
+              {filteredHospitals.map((h) => {
+                const coords = getHospitalCoords(h);
+                const isSelected = selectedHospitalId === h.id;
+                
+                // Scale coordinates cleanly centered around the chosen view
+                const isIndiaWide = !cityFilter;
+                const activeCenterCoords = cityFilter && CITY_COORDINATES[cityFilter] 
+                  ? CITY_COORDINATES[cityFilter] 
+                  : { lat: 20.5937, lng: 78.9629 };
+
+                const latDiff = coords.lat - activeCenterCoords.lat;
+                const lngDiff = coords.lng - activeCenterCoords.lng;
+
+                // Percent positions inside the grid (keep within 10%-90%)
+                const leftPercent = isIndiaWide
+                  ? Math.min(90, Math.max(10, ((coords.lng - 68) / (97 - 68)) * 100))
+                  : Math.min(88, Math.max(12, 50 + (lngDiff * 1400))); // higher amplification for city view
+                
+                const topPercent = isIndiaWide
+                  ? Math.min(90, Math.max(10, (1 - (coords.lat - 8) / (37 - 8)) * 100))
+                  : Math.min(88, Math.max(12, 50 - (latDiff * 1400)));
+
+                return (
+                  <div
+                    key={h.id}
+                    style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 z-20 group/pin"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedHospitalId(h.id);
+                        toast.info(`Active target locked: ${h.name}`);
+                      }}
+                      className="relative flex items-center justify-center cursor-pointer transition-transform duration-200 active:scale-75"
+                    >
+                      {/* Interactive Pulse Halo if selected */}
+                      {isSelected && (
+                        <span className="absolute flex h-7 w-7">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400/40"></span>
+                          <span className="relative inline-flex rounded-full h-7 w-7 border border-pink-500/30"></span>
+                        </span>
+                      )}
+
+                      {/* Actual Marker Node */}
+                      <span className={`w-3 h-3 rounded-full border border-slate-950 flex items-center justify-center shadow-lg transition-all duration-300 ${
+                        isSelected 
+                          ? 'bg-pink-500 scale-125 ring-2 ring-pink-300' 
+                          : h.type === 'Government' 
+                            ? 'bg-emerald-500 hover:bg-emerald-400 ring-1 ring-emerald-500/20' 
+                            : 'bg-cyan-500 hover:bg-cyan-400 ring-1 ring-cyan-500/20'
+                      }`}>
+                        <span className="w-1 h-1 bg-white rounded-full"></span>
+                      </span>
+                    </button>
+
+                    {/* Rich Hover / Active Tooltip */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-950 border border-slate-800 px-2.5 py-1.5 rounded-xl shadow-xl w-44 pointer-events-none opacity-0 group-hover/pin:opacity-100 transition-all duration-200 z-30 text-xxs font-sans">
+                      <p className="font-extrabold text-white truncate">{h.name}</p>
+                      <div className="flex justify-between items-center mt-1 text-[9px] font-mono">
+                        <span className={h.type === 'Government' ? 'text-emerald-400' : 'text-cyan-400'}>
+                          {h.type}
+                        </span>
+                        <span className="text-slate-400">
+                          {h.beds.bedsGeneralFree} General Free
+                        </span>
+                      </div>
+                      <p className="text-[8px] text-slate-500 mt-0.5 font-mono">Distance: {h.beds.distanceKm} km</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Map Legend Bar */}
+            <div className="flex justify-between items-center px-4 py-2 bg-slate-950/80 border-t border-slate-900 z-10 text-[9px] font-mono text-slate-400">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  Govt ({filteredHospitals.filter(h => h.type === 'Government').length})
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  Private ({filteredHospitals.filter(h => h.type !== 'Government').length})
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-pink-500"></span>
+                  Selected
+                </span>
+              </div>
+              <span className="text-slate-500 text-[8px]">AURA MEDICAL SYSTEM GRID</span>
+            </div>
+          </div>
+
           {/* Hospitals List */}
           <div className="space-y-4 max-h-[580px] overflow-y-auto pr-1">
             {filteredHospitals.length === 0 ? (
@@ -230,7 +406,9 @@ export const HospitalFinderView: React.FC = () => {
               filteredHospitals.map((h) => (
                 <div
                   key={h.id}
-                  className="p-5 bg-slate-900/30 border border-slate-800/80 rounded-2xl flex flex-col md:flex-row justify-between gap-4 hover:border-cyan-500/20 transition-all shadow-md"
+                  className={`p-5 bg-slate-900/30 border rounded-2xl flex flex-col md:flex-row justify-between gap-4 hover:border-cyan-500/20 transition-all shadow-md ${
+                    selectedHospitalId === h.id ? 'border-cyan-500/50 bg-cyan-950/5' : 'border-slate-800/80'
+                  }`}
                 >
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -279,7 +457,20 @@ export const HospitalFinderView: React.FC = () => {
                     </div>
                     <div className="col-span-3 border-t border-slate-900 pt-1.5 flex justify-between items-center text-[9px] text-slate-500">
                       <span>Tariff: <strong className="text-slate-300">{h.costCategory}</strong></span>
-                      <span>Insurance: <strong className="text-slate-300">{h.insuranceAccepted ? 'Accepted' : 'None'}</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedHospitalId(h.id);
+                          const coords = getHospitalCoords(h);
+                          setMapCenter(coords);
+                          setMapZoom(13);
+                          toast.info(`Centered map on ${h.name}`);
+                        }}
+                        className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 font-bold cursor-pointer"
+                      >
+                        <Compass size={11} className="animate-spin" style={{ animationDuration: '6s' }} />
+                        Locate on Map
+                      </button>
                     </div>
                   </div>
                 </div>

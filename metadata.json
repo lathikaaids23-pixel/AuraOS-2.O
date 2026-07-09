@@ -1,6 +1,6 @@
 {
   "name": "Aura OS 2.0",
   "description": "Next-gen Clinical Intelligence OS featuring live Indian hospital databases, automated prescription auditing, trilingual FAQ bots, and real-time emergency SOS tracking.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

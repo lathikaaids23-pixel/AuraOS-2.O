@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ClinicState, getInitialLocalState, saveLocalStateKey } from './store';
 import { Patient, Appointment, Consultation, QueueItem, UserSession, Hospital, Ambulance, HospitalBedStatus, Payment, ClinicSettings } from './types';
-import { isFirebaseConfigured, db, handleFirestoreError, OperationType } from './firebase';
+import { isFirebaseConfigured, db, auth, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { toast } from 'sonner';
 
 interface ClinicContextProps {
@@ -28,15 +29,64 @@ const ClinicContext = createContext<ClinicContextProps | undefined>(undefined);
 
 export const ClinicProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<ClinicState>(getInitialLocalState());
+  const [firebaseUser, setFirebaseUser] = useState<any>(null);
+  const [authChecking, setAuthChecking] = useState(true);
 
-  // Set up Firestore Sync when Firebase is enabled
+  // Monitor Firebase Auth State
+  useEffect(() => {
+    if (!isFirebaseConfigured || !auth) {
+      setAuthChecking(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Firebase Auth State Change:', user ? `User signed in: ${user.uid}` : 'No user signed in');
+      setFirebaseUser(user);
+      setAuthChecking(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Handle auto-login to Firebase anonymously for Sandbox/Simulated pre-filled logins
+  useEffect(() => {
+    if (!isFirebaseConfigured || !auth || authChecking) return;
+
+    if (state.currentUser && !firebaseUser) {
+      console.log('Simulated user detected without active Firebase session. Triggering background auth handshake...');
+      signInAnonymously(auth)
+        .then((result) => {
+          console.log('Background anonymous auth handshake success:', result.user.uid);
+        })
+        .catch((err) => {
+          console.error('Failed background anonymous auth handshake:', err);
+        });
+    }
+  }, [state.currentUser, firebaseUser, authChecking]);
+
+  // Set up Firestore Sync when Firebase is enabled and user is authenticated
   useEffect(() => {
     if (!isFirebaseConfigured || !db) {
       console.log('Firebase unconfigured or offline - Running Aura OS in Local Storage mode.');
       return;
     }
 
-    console.log('Firebase active - Initializing live Firestore sync for Aura OS.');
+    if (!state.currentUser) {
+      console.log('No authenticated user - skipping live Firestore sync.');
+      return;
+    }
+
+    if (authChecking) {
+      console.log('Checking Firebase Auth state before sync...');
+      return;
+    }
+
+    if (!firebaseUser) {
+      console.log('Firebase is configured, but no active Firebase Auth session is ready yet. Deferring live sync.');
+      return;
+    }
+
+    console.log('Firebase active and authenticated - Initializing live Firestore sync for Aura OS.');
 
     // 1. Sync Patients
     const unsubPatients = onSnapshot(collection(db, 'patients'), (snapshot) => {
@@ -140,7 +190,7 @@ export const ClinicProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       unsubBedStatuses();
       unsubSettings();
     };
-  }, []);
+  }, [state.currentUser, firebaseUser, authChecking]);
 
   // Interval polling for Bed Status and simulated ambulances in local mode
   useEffect(() => {

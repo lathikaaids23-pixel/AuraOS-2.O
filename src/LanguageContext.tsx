@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type Language = 'en' | 'ta' | 'hi';
+export type Language = 'en' | 'ta' | 'hi' | 'te' | 'mr';
 
 export interface TranslationDict {
   [key: string]: {
     en: string;
     ta: string;
     hi: string;
+    te?: string;
+    mr?: string;
   };
 }
 
@@ -16,61 +18,92 @@ export const TRANSLATIONS: TranslationDict = {
     en: 'Aura OS 2.0',
     ta: 'ஆரா ஓஎஸ் 2.0',
     hi: 'ऑरा ओएस 2.0',
+    te: 'ఆరా ఓఎస్ 2.0',
+    mr: 'ऑरा ओएस २.०',
   },
   tagline: {
     en: 'Next-Gen Clinic Operating System',
     ta: 'அடுத்த தலைமுறை கிளினிக் இயக்க முறைமை',
     hi: 'नेक्स्ट-जेन क्लिनिक ऑपरेटिंग सिस्टम',
+    te: 'నెక్స్ట్-జెన్ క్లినిక్ ఆపరేటింగ్ సిస్టమ్',
+    mr: 'नेक्स्ट-जेन क्लिनिक ऑपरेटिंग सिस्टम',
   },
   dashboard: {
     en: 'Dashboard',
     ta: 'டாஷ்போர்டு',
     hi: 'डैशबोर्ड',
+    te: 'డాష్‌బోర్డ్',
+    mr: 'डॅशबोर्ड',
+  },
+  scanner: {
+    en: 'AI Vision Scanner',
+    ta: 'AI கேமரா ஸ்கேனர்',
+    hi: 'एआई विजन स्कैनर',
+    te: 'AI విజన్ స్కానర్',
+    mr: 'एआय व्हिजन स्कॅनर',
   },
   patients: {
     en: 'Patients',
     ta: 'நோயாளிகள்',
     hi: 'मरीज',
+    te: 'రోగులు',
+    mr: 'रुग्ण',
   },
   appointments: {
     en: 'Appointments',
     ta: 'அப்பாயிண்ட்மெண்ட்ஸ்',
     hi: 'अपॉइंटमेंट',
+    te: 'అపాయింట్‌మెంట్‌లు',
+    mr: 'अपॉइंटमेंट्स',
   },
   consultation: {
     en: 'Consultation',
     ta: 'ஆலோசனை',
     hi: 'परामर्श',
+    te: 'సంప్రదింపులు',
+    mr: 'सल्लामसलत',
   },
   hospitalFinder: {
     en: 'Hospital Finder',
     ta: 'மருத்துவமனை தேடல்',
     hi: 'अस्पताल खोजक',
+    te: 'హాస్పిటల్ ఫైండర్',
+    mr: 'रुग्णालय शोधक',
   },
   emergency: {
     en: 'EMERGENCY',
     ta: 'அவசரகாலம்',
     hi: 'आपातकाल',
+    te: 'అత్యవసర',
+    mr: 'आणीबाणी',
   },
   queue: {
     en: 'Queue',
     ta: 'வரிசை',
     hi: 'कतार',
+    te: 'క్యూ',
+    mr: 'रांग',
   },
   reports: {
     en: 'Reports',
     ta: 'அறிக்கைகள்',
     hi: 'रिपोर्ट्स',
+    te: 'నివేదికలు',
+    mr: 'अहवाल',
   },
   settings: {
     en: 'Settings',
     ta: 'அமைப்புகள்',
     hi: 'सेटिंग्स',
+    te: 'సెట్టింగ్‌లు',
+    mr: 'सेटिंग्ज',
   },
   logout: {
     en: 'Logout',
     ta: 'வெளியேறு',
     hi: 'लॉगआउट',
+    te: 'లాగ్ అవుట్',
+    mr: 'लॉगआउट',
   },
 
   // Dashboard View

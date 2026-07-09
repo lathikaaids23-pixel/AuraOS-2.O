@@ -1,47 +1,195 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Global catch-all safety net (Pillar 1)
+    // 1. Global Catch-All Safety Net
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Helper functions for secure checks
+    // --- Phase 3: Primitive Definition ---
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // Collections
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Check if the user is the primary admin of Aura OS
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'lathikaaids23@sasurie.com';
+    }
+
+    // --- Phase 4: Entity Validation Blueprints ---
+
+    // 1. Patient Entity Validation
+    function isValidPatient(data) {
+      return data.keys().hasAll(['id', 'name', 'age', 'gender', 'phone', 'city', 'condition', 'createdAt'])
+        && data.keys().size() <= 10
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.age is int && data.age >= 0 && data.age <= 150
+        && data.gender is string && (data.gender == 'Male' || data.gender == 'Female' || data.gender == 'Other')
+        && data.phone is string && data.phone.size() <= 30
+        && data.city is string && data.city.size() <= 100
+        && data.condition is string && data.condition.size() <= 200
+        && (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    // 2. Appointment Entity Validation
+    function isValidAppointment(data) {
+      return data.keys().hasAll(['id', 'patientId', 'patientName', 'doctorId', 'doctorName', 'date', 'timeSlot', 'status', 'createdAt'])
+        && data.keys().size() <= 11
+        && data.id is string && data.id.size() <= 128
+        && data.patientId is string && data.patientId.size() <= 128
+        && data.patientName is string && data.patientName.size() <= 100
+        && data.doctorId is string && data.doctorId.size() <= 128
+        && data.doctorName is string && data.doctorName.size() <= 100
+        && data.date is string && data.date.size() <= 20
+        && data.timeSlot is string && data.timeSlot.size() <= 30
+        && data.status is string && (data.status == 'scheduled' || data.status == 'completed' || data.status == 'cancelled')
+        && (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    // 3. Consultation Entity Validation
+    function isValidConsultation(data) {
+      return data.keys().hasAll(['id', 'patientId', 'patientName', 'doctorId', 'doctorName', 'symptoms', 'diagnosis', 'notes', 'prescription', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.patientId is string && data.patientId.size() <= 128
+        && data.patientName is string && data.patientName.size() <= 100
+        && data.doctorId is string && data.doctorId.size() <= 128
+        && data.doctorName is string && data.doctorName.size() <= 100
+        && data.symptoms is string && data.symptoms.size() <= 5000
+        && data.diagnosis is string && data.diagnosis.size() <= 5000
+        && data.notes is string && data.notes.size() <= 10000
+        && data.prescription is list
+        && (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    // 4. QueueItem Entity Validation
+    function isValidQueueItem(data) {
+      return data.keys().hasAll(['id', 'patientId', 'patientName', 'tokenNumber', 'doctorId', 'doctorName', 'status', 'checkInTime', 'estimatedWaitMinutes'])
+        && data.id is string && data.id.size() <= 128
+        && data.patientId is string && data.patientId.size() <= 128
+        && data.patientName is string && data.patientName.size() <= 100
+        && data.tokenNumber is int && data.tokenNumber >= 0
+        && data.doctorId is string && data.doctorId.size() <= 128
+        && data.doctorName is string && data.doctorName.size() <= 100
+        && data.status is string && (data.status == 'Waiting' || data.status == 'In Progress' || data.status == 'Completed' || data.status == 'Skipped')
+        && data.checkInTime is string && data.checkInTime.size() <= 30
+        && data.estimatedWaitMinutes is int && data.estimatedWaitMinutes >= 0;
+    }
+
+    // 5. Ambulance Entity Validation
+    function isValidAmbulance(data) {
+      return data.keys().hasAll(['id', 'vehicleNumber', 'type', 'area', 'distanceKm', 'status', 'driverName', 'driverPhone', 'lastUpdated'])
+        && data.id is string && data.id.size() <= 128
+        && data.vehicleNumber is string && data.vehicleNumber.size() <= 30
+        && data.type is string && (data.type == 'ALS' || data.type == 'BLS')
+        && data.area is string && data.area.size() <= 100
+        && (data.distanceKm is number || data.distanceKm is int) && data.distanceKm >= 0.0
+        && data.status is string && (data.status == 'Available' || data.status == 'On the way' || data.status == 'At emergency')
+        && data.driverName is string && data.driverName.size() <= 100
+        && data.driverPhone is string && data.driverPhone.size() <= 30
+        && data.lastUpdated is string && data.lastUpdated.size() <= 50;
+    }
+
+    // 6. HospitalBedStatus Entity Validation
+    function isValidHospitalBedStatus(data) {
+      return data.keys().hasAll(['hospitalId', 'hospitalName', 'distanceKm', 'bedsGeneralFree', 'bedsICUFree', 'bedsEmergencyFree', 'patientsAdmitted', 'patientsWaitingOPD', 'patientsInTreatment', 'lastUpdated'])
+        && data.hospitalId is string && data.hospitalId.size() <= 128
+        && data.hospitalName is string && data.hospitalName.size() <= 200
+        && (data.distanceKm is number || data.distanceKm is int) && data.distanceKm >= 0.0
+        && data.bedsGeneralFree is int && data.bedsGeneralFree >= 0
+        && data.bedsICUFree is int && data.bedsICUFree >= 0
+        && data.bedsEmergencyFree is int && data.bedsEmergencyFree >= 0
+        && data.patientsAdmitted is int && data.patientsAdmitted >= 0
+        && data.patientsWaitingOPD is int && data.patientsWaitingOPD >= 0
+        && data.patientsInTreatment is int && data.patientsInTreatment >= 0
+        && data.lastUpdated is string && data.lastUpdated.size() <= 50;
+    }
+
+    // 7. Payment Entity Validation
+    function isValidPayment(data) {
+      return data.keys().hasAll(['id', 'patientId', 'patientName', 'amount', 'method', 'status', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.patientId is string && data.patientId.size() <= 128
+        && data.patientName is string && data.patientName.size() <= 100
+        && (data.amount is number || data.amount is int) && data.amount >= 0.0
+        && data.method is string && (data.method == 'UPI' || data.method == 'GPay' || data.method == 'PhonePe' || data.method == 'Cash')
+        && data.status is string && (data.status == 'pending' || data.status == 'completed' || data.status == 'failed')
+        && (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    // Match Blocks for each collection
+
     match /patients/{patientId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(patientId) && isValidPatient(incoming());
+      allow update: if isSignedIn() && isValidId(patientId) && isValidPatient(incoming()) 
+                     && incoming().createdAt == existing().createdAt;
+      allow delete: if isAdmin();
     }
 
     match /appointments/{appointmentId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(appointmentId) && isValidAppointment(incoming());
+      allow update: if isSignedIn() && isValidId(appointmentId) && isValidAppointment(incoming())
+                     && incoming().createdAt == existing().createdAt;
+      allow delete: if isAdmin();
     }
 
     match /consultations/{consultationId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(consultationId) && isValidConsultation(incoming());
+      // Medical logs are immutable once written to protect patient healthcare records from manipulation
+      allow update: if false;
+      allow delete: if isAdmin();
     }
 
     match /queue/{queueItemId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(queueItemId) && isValidQueueItem(incoming());
+      allow update: if isSignedIn() && isValidId(queueItemId) && isValidQueueItem(incoming());
+      allow delete: if isSignedIn() && isValidId(queueItemId);
     }
 
     match /ambulances/{ambulanceId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(ambulanceId) && isValidAmbulance(incoming());
+      allow update: if isSignedIn() && isValidId(ambulanceId) && isValidAmbulance(incoming());
+      allow delete: if isAdmin();
     }
 
     match /bedStatuses/{bedStatusId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(bedStatusId) && isValidHospitalBedStatus(incoming());
+      allow update: if isSignedIn() && isValidId(bedStatusId) && isValidHospitalBedStatus(incoming());
+      allow delete: if isAdmin();
     }
 
     match /payments/{paymentId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(paymentId) && isValidPayment(incoming());
+      // Payments are immutable except status updates
+      allow update: if isSignedIn() && isValidId(paymentId) && isValidPayment(incoming())
+                     && incoming().createdAt == existing().createdAt
+                     && incoming().patientId == existing().patientId
+                     && incoming().amount == existing().amount;
+      allow delete: if false; // payment ledger is strictly undeletable
     }
 
     match /settings/{settingsId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

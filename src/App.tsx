@@ -8,6 +8,7 @@ import { PatientsView } from './components/PatientsView';
 import { QueueView } from './components/QueueView';
 import { AppointmentsView } from './components/AppointmentsView';
 import { ConsultationView } from './components/ConsultationView';
+import { ScannerView } from './components/ScannerView';
 import { ReportsView } from './components/ReportsView';
 import { HospitalFinderView } from './components/HospitalFinderView';
 import { EmergencyView } from './components/EmergencyView';
@@ -18,6 +19,17 @@ import { Toaster } from 'sonner';
 const AppContent: React.FC = () => {
   const { state } = useClinic();
   const [activePage, setActivePage] = useState('dashboard');
+
+  React.useEffect(() => {
+    const handleNavigate = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        setActivePage(customEvent.detail);
+      }
+    };
+    window.addEventListener('aura-navigate', handleNavigate);
+    return () => window.removeEventListener('aura-navigate', handleNavigate);
+  }, []);
 
   if (!state.currentUser) {
     return <LoginView />;
@@ -30,6 +42,7 @@ const AppContent: React.FC = () => {
       {activePage === 'queue' && <QueueView />}
       {activePage === 'appointments' && <AppointmentsView />}
       {activePage === 'consultation' && <ConsultationView />}
+      {activePage === 'scanner' && <ScannerView />}
       {activePage === 'reports' && <ReportsView />}
       {activePage === 'hospital-finder' && <HospitalFinderView />}
       {activePage === 'emergency' && <EmergencyView />}

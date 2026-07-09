@@ -14,7 +14,8 @@ import {
   LogOut,
   AlertTriangle,
   Menu,
-  X
+  X,
+  Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -35,6 +36,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, activePage, setAct
     { id: 'queue', label: t('queue'), icon: ListOrdered },
     { id: 'appointments', label: t('appointments'), icon: CalendarCheck },
     { id: 'consultation', label: t('consultation'), icon: Stethoscope },
+    { id: 'scanner', label: t('scanner'), icon: Camera },
     { id: 'reports', label: t('reports'), icon: FileBarChart },
     { id: 'hospital-finder', label: t('hospitalFinder'), icon: MapPin },
     { id: 'settings', label: t('settings'), icon: Settings },
@@ -73,9 +75,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children, activePage, setAct
 
         {/* Global Controls: Languages, EMERGENCY and User Info */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Trilingual toggle */}
+          {/* Multilingual toggle */}
           <div className="hidden sm:flex items-center gap-1 bg-slate-900/60 p-1 rounded-lg border border-slate-800 text-xs">
-            {(['en', 'ta', 'hi'] as const).map((lang) => (
+            {(['en', 'ta', 'hi', 'te', 'mr'] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
@@ -85,7 +87,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, activePage, setAct
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                {lang === 'en' ? 'EN' : lang === 'ta' ? 'தமிழ்' : 'हिंदी'}
+                {lang === 'en' ? 'EN' : lang === 'ta' ? 'தமிழ்' : lang === 'hi' ? 'हिंदी' : lang === 'te' ? 'తెలుగు' : 'मराठी'}
               </button>
             ))}
           </div>
@@ -150,11 +152,34 @@ export const AppShell: React.FC<AppShellProps> = ({ children, activePage, setAct
             </nav>
           </div>
 
-          <div className="p-3 bg-slate-950/80 border border-blue-500/10 rounded-xl flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <div className="text-[10px] font-mono text-slate-400">
-              <div>Aura Cloud Sync</div>
-              <div className="text-emerald-400/80">Secured & Active</div>
+          <div className="space-y-2.5">
+            {/* Aura Vision Scanner Indicator */}
+            <div className="p-3.5 bg-cyan-950/20 border border-cyan-500/15 rounded-xl space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                </span>
+                <span className="text-[9px] font-mono font-black text-cyan-400 tracking-widest uppercase">AURA VISION SCAN</span>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-normal font-sans">
+                Digitize handwritten prescriptions & analyze tablets with high-performance clinical AI.
+              </p>
+              <button
+                onClick={() => setActivePage('scanner')}
+                className="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[10px] rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md shadow-cyan-900/20 cursor-pointer"
+              >
+                <Camera size={12} />
+                Open Scanner Room
+              </button>
+            </div>
+
+            <div className="p-3 bg-slate-950/80 border border-blue-500/10 rounded-xl flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="text-[10px] font-mono text-slate-400">
+                <div>Aura Cloud Sync</div>
+                <div className="text-emerald-400/80">Secured & Active</div>
+              </div>
             </div>
           </div>
         </aside>
@@ -214,6 +239,21 @@ export const AppShell: React.FC<AppShellProps> = ({ children, activePage, setAct
                 </div>
 
                 <div className="space-y-3">
+                  {/* Aura Vision Scanner mobile launcher */}
+                  <div className="p-3 bg-cyan-950/20 border border-cyan-500/15 rounded-xl space-y-1.5 text-center">
+                    <span className="text-[9px] font-mono font-black text-cyan-400 tracking-widest uppercase block">AURA VISION SCAN</span>
+                    <button
+                      onClick={() => {
+                        setActivePage('scanner');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[10px] rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer"
+                    >
+                      <Camera size={12} />
+                      Open Scanner Room
+                    </button>
+                  </div>
+
                   <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-lg text-xs">
                     {(['en', 'ta', 'hi'] as const).map((lang) => (
                       <button
